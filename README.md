@@ -51,11 +51,10 @@ keys belong only in the backend environment, never in frontend variables.
 
 ## Deployment
 
-`npm run build` outputs static assets in `dist`. The development proxy is not
-part of this output. Set `VITE_API_BASE_URL` to the HTTPS backend origin before
-building (see `.env.example`), or configure a same-origin reverse proxy for /api.
-For a different backend origin, configure FastAPI CORS to allow the exact
-frontend origin. VITE variables are public and embedded at build time.
+`npm run build` outputs static assets in `dist`. Production builds use
+`https://cadaicotesttask.onrender.com` by default. Set `VITE_API_BASE_URL` to
+override the backend origin (see `.env.example`). VITE variables are public and
+embedded at build time.
 
 ## Checks
 

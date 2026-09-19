@@ -1,9 +1,11 @@
 import { parseGeometry } from './geometry'
 
+const DEFAULT_API_BASE_URL = 'https://cadaicotesttask.onrender.com'
+
 export async function processDrawing(file: File, signal: AbortSignal) {
   const body = new FormData()
   body.append('file', file)
-  const base = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
+  const base = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, '')
   let response: Response
   try {
     response = await fetch(`${base}/api/v1/extractions`, { method: 'POST', body, signal })
