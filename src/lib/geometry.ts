@@ -33,6 +33,10 @@ export interface GeometryResult {
   edges: Edge[]
   issues: { target: string | null; reason: string }[]
 }
+export interface DrawingArtifacts {
+  geometry: GeometryResult
+  dxf: string | null
+}
 export const formatNumber = (value: number) =>
   (Math.abs(value) < 0.0005 ? 0 : value).toLocaleString('en-US', { maximumFractionDigits: 3 })
 const tau = Math.PI * 2
@@ -132,4 +136,19 @@ export function parseGeometry(value: unknown): GeometryResult {
     } else return fail()
   }
   return g
+}
+
+export function parseDrawingArtifacts(value: unknown): DrawingArtifacts {
+  const fail = () => {
+    throw new Error('The server returned invalid drawing artifacts. Please try again.')
+  }
+  if (!value || typeof value !== 'object') return fail()
+  const artifacts = value as { geometry?: unknown; dxf?: unknown }
+  const geometry = parseGeometry(artifacts.geometry)
+  if (geometry.status === 'Success') {
+    if (typeof artifacts.dxf !== 'string' || !artifacts.dxf.trim()) return fail()
+    return { geometry, dxf: artifacts.dxf }
+  }
+  if (artifacts.dxf !== null) return fail()
+  return { geometry, dxf: null }
 }

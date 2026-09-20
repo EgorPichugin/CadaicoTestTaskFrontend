@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { defineAsyncComponent, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { downloadText, exportDxf, exportJson } from '../lib/export'
+import { downloadText, exportJson } from '../lib/export'
 import {
   edgePath,
   formatNumber as fmt,
@@ -10,13 +10,13 @@ import {
 } from '../lib/geometry'
 const SolidViewer = defineAsyncComponent(() => import('./SolidViewer.vue'))
 const viewMode = ref<'2d' | '3d'>('2d')
-const props = defineProps<{ geometry: GeometryResult }>()
+const props = defineProps<{ geometry: GeometryResult; dxf: string }>()
 const exportError = ref('')
 function download(format: 'json' | 'dxf') {
   exportError.value = ''
   try {
     downloadText(
-      format === 'json' ? exportJson(props.geometry) : exportDxf(props.geometry),
+      format === 'json' ? exportJson(props.geometry) : props.dxf,
       `cadaico-contour.${format}`,
       format === 'json' ? 'application/json' : 'application/dxf',
     )

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { edgePath, geometryBounds, parseGeometry, type GeometryResult, type Arc } from '../src/lib/geometry.ts'
+import { edgePath, geometryBounds, parseDrawingArtifacts, parseGeometry, type GeometryResult, type Arc } from '../src/lib/geometry.ts'
 const arc: Arc = { id: 'e1', type: 'arc', from: 'p0', to: 'p1', center: { x: 0, y: 0 }, radius: 1, clockwise: true, sweep_angle_degrees: 270, shape: 'out', arc_size: 'major' }
 const geometry: GeometryResult = { status: 'Success', units: 'mm', is_closed: true, vertices: [{ id: 'p0', x: 1, y: 0 }, { id: 'p1', x: 0, y: 1 }], edges: [arc, { id: 'e2', type: 'line', from: 'p1', to: 'p0', length: Math.SQRT2 }], issues: [] }
 test('major clockwise arcs include extrema beyond their endpoints', () => {
@@ -32,4 +32,22 @@ test('invalid geometry never reaches the viewer', () => {
   assert.throws(() => parseGeometry({ ...geometry, status: 'Unresolved' }))
   assert.throws(() => parseGeometry({ ...geometry, edges: [{ ...arc, radius: -1 }, geometry.edges[1]] }))
   assert.throws(() => parseGeometry('<html>Bad gateway</html>'))
+})
+test('successful drawing artifacts require backend-generated DXF', () => {
+  const artifacts = parseDrawingArtifacts({ geometry, dxf: '0\r\nSECTION\r\n0\r\nEOF\r\n' })
+  assert.equal(artifacts.geometry.status, 'Success')
+  assert.match(artifacts.dxf!, /SECTION/)
+  assert.throws(() => parseDrawingArtifacts({ geometry, dxf: null }))
+})
+test('unsolved drawing artifacts reject misleading DXF', () => {
+  const unresolved = {
+    ...geometry,
+    status: 'Unresolved',
+    is_closed: false,
+    vertices: [],
+    edges: [],
+    issues: [{ target: null, reason: 'Missing dimensions' }],
+  }
+  assert.equal(parseDrawingArtifacts({ geometry: unresolved, dxf: null }).dxf, null)
+  assert.throws(() => parseDrawingArtifacts({ geometry: unresolved, dxf: 'invalid' }))
 })

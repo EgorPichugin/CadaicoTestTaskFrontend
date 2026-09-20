@@ -1,4 +1,4 @@
-import { parseGeometry } from './geometry'
+import { parseDrawingArtifacts } from './geometry'
 
 const DEFAULT_API_BASE_URL = 'https://cadaicotesttask.onrender.com'
 
@@ -30,5 +30,5 @@ export async function processDrawing(file: File, signal: AbortSignal) {
         : (fallback[response.status] ?? 'Processing failed. Please try again later.'),
     )
   }
-  return parseGeometry(data)
+  return parseDrawingArtifacts(data)
 }

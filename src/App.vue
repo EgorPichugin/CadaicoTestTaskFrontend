@@ -7,6 +7,7 @@ import type { GeometryResult } from './lib/geometry'
 const processing = ref(false)
 const processingError = ref('')
 const result = ref<GeometryResult | null>(null)
+const dxf = ref<string | null>(null)
 let request: AbortController | null = null
 const resultMessages = {
   Success: 'Your contour is ready',
@@ -26,14 +27,18 @@ async function submitDrawing() {
   processing.value = true
   processingError.value = ''
   result.value = null
+  dxf.value = null
   let timedOut = false
   const timer = window.setTimeout(() => {
     timedOut = true
     controller.abort()
   }, 240_000)
   try {
-    const geometry = await processDrawing(selectedFile.value, controller.signal)
-    if (request === controller) result.value = geometry
+    const artifacts = await processDrawing(selectedFile.value, controller.signal)
+    if (request === controller) {
+      result.value = artifacts.geometry
+      dxf.value = artifacts.dxf
+    }
   } catch (error) {
     if (request === controller) {
       processingError.value = controller.signal.aborted
@@ -131,6 +136,7 @@ async function selectFiles(files: FileList | File[] | null, example: string | nu
     selectedFile.value = file
     selectedExample.value = example
     result.value = null
+    dxf.value = null
     processingError.value = ''
   } catch {
     URL.revokeObjectURL(url)
@@ -157,6 +163,7 @@ function removeFile() {
   processing.value = false
   processingError.value = ''
   result.value = null
+  dxf.value = null
   selection++
   if (preview.value) URL.revokeObjectURL(preview.value)
   preview.value = ''
@@ -388,7 +395,11 @@ onBeforeUnmount(removeFile)
               </button>
             </div>
             <template v-else-if="result">
-              <ContourViewer v-if="result.status === 'Success'" :geometry="result" />
+              <ContourViewer
+                v-if="result.status === 'Success' && dxf"
+                :geometry="result"
+                :dxf="dxf"
+              />
               <div v-else class="result-message" role="status">
                 <span class="message-symbol" aria-hidden="true">!</span>
                 <h3>{{ resultMessages[result.status] }}</h3>
